@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Node Setup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; margin: 0; }
+        .box { background: #1e1e1e; padding: 30px 20px; border-radius: 12px; max-width: 400px; margin: 40px auto; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+        h2 { color: #00ffcc; margin-top: 0; }
+        p { color: #aaa; margin-bottom: 25px; }
+        select, input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 6px; border: none; font-size: 16px; box-sizing: border-box; }
+        select, input { background: #2a2a2a; color: #fff; outline: none; }
+        select:focus, input:focus { border: 1px solid #00ffcc; }
+        button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        button:hover { background: #00cca3; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Device Setup</h2>
+        <p>Select your Wi-Fi network below</p>
+        <select id="ssid"><option>Scanning networks...</option></select>
+        <input type="password" id="pw" placeholder="Wi-Fi Password">
+        <button onclick="send()">Connect Node</button>
+    </div>
+    <script>
+        // Fetch available networks from hardware scan
+        fetch('/networks')
+            .then(r => r.json())
+            .then(nets => {
+                let sel = document.getElementById('ssid');
+                if(!nets || nets.length === 0) { sel.innerHTML = '<option>No networks found</option>'; return; }
+                sel.innerHTML = '';
+                nets.forEach(n => sel.innerHTML += `<option value="${n.ssid}">${n.ssid}</option>`);
+            }).catch(e => document.getElementById('ssid').innerHTML = '<option>Scan failed</option>');
+
+        // Send credentials to backend
+        function send() {
+            let btn = document.querySelector('button');
+            btn.innerText = "Connecting...";
+            btn.disabled = true;
+            fetch('/connect', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    ssid: document.getElementById('ssid').value, 
+                    password: document.getElementById('pw').value
+                })
+            }).then(() => {
+                alert('Connection command sent! The node will now try to connect. You can close this screen.');
+            });
+        }
+    </script>
+</body>
+</html>
